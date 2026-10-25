@@ -16,13 +16,15 @@
     "maxStepTimeSeconds": 45,
     "waitForNetworkIdle": false,
     "notes": [
-      "The supplied APP DETAILS JSON still contains "demoUrl": null.",
-      "The contract requires copying the submitted demoUrl exactly. A URL from earlier conversation cannot replace this missing value.",
-      "Automated browser verification cannot run until a demo URL is included in the submission details."
+      "The supplied APP DETAILS JSON still has submission.demoUrl set to null. The base URL rules prohibit substituting the application URL from earlier conversation.",
+      "The submission description fields are also null. Saving answers in the GitHub repository does not populate the judging application's submission form.",
+      "Browser verification is blocked until the submission form contains the demo URL and an updated verification prompt is generated."
     ]
   },
   "workflows": [],
   "manualReviewTriggers": [
-    "Set submission.demoUrl to "https://abarisuzuner.github.io/cancellation-backfil/\" in APP DETAILS JSON, then regenerate this contract."
+    "Enter https://abarisuzuner.github.io/cancellation-backfil/ in the submission form's Demo URL field.",
+    "Copy the completed answers from docs/Judge App Questions.md into the corresponding submission fields, save the form, and download a fresh verification prompt.",
+    "Confirm that the regenerated APP DETAILS JSON contains a non-null submission.demoUrl before generating executable workflows."
   ]
 }
