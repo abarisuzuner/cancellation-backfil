@@ -1,28 +1,31 @@
-What did you build?
+# Cancellation Backfill — Submission Answers
+
+## What did you build?
 
 We built Cancellation Backfill, a web application that helps small dental and physiotherapy clinics fill cancelled appointments from their waitlist. It combines an appointment dashboard, patient preferences, ranked matching, expiring offers, and one-click acceptance. Staff can follow an opening through to a replacement booking and see the time taken to fill it and its estimated appointment value.
 
-Who has this problem?
+## Who has this problem?
 
 Front-desk coordinators at small clinics need to fill cancellations while managing patients, calls, and other administrative work. They often work through a waitlist manually, contacting people who may not answer, be available, or have enough time to reach the clinic. The appointment can remain empty while suitable patients continue waiting. Clinic owners lose usable appointment capacity, and patients miss opportunities to receive care sooner.
 
-How does your app solve it?
+## How does your app solve it?
 
 Cancellation Backfill turns a manual calling process into one clear workflow. When staff cancel an appointment, the app checks treatment compatibility, clinician preference, duration, availability, notice, and travel time. It ranks eligible patients by staff-assigned priority, waiting time, and distance, with explanations staff can review.
 
 The main demo opens the 3pm appointment, offers it to Alex, and lets the patient accept through the in-app preview. The dashboard immediately shows the replacement booking, which remains after refresh. Declined or expired offers allow staff to contact the next eligible patient, while repeated acceptance cannot create duplicate bookings.
 
-How did you build it?
+## How did you build it?
 
 We built the published application with JavaScript, HTML, and CSS and deployed it on GitHub Pages. Separate modules handle scheduling rules, persistence, availability parsing, and the interface. Browser storage preserves the sample workspace, and Web Locks coordinate updates across tabs. We also have a separate Python/SQLite server prototype.
 
 The availability assistant currently uses a local rule-based parser, with human review before saving preferences; live AI is not connected. We verified desktop and mobile workflows and passed 21 JavaScript checks plus eight Python checks. The strongest feature is the complete cancellation-to-booking journey. Next steps are shared Oracle-backed persistence, OCI Generative AI, and real notification delivery.
 
-Demo URL
+## Demo URL
 
-https://abarisuzuner.github.io/cancellation-backfil/
+[Open Cancellation Backfill](https://abarisuzuner.github.io/cancellation-backfil/)
+
 No login required.
 
-Repository URL
+## Repository URL
 
-https://github.com/abarisuzuner/cancellation-backfil
+[View the repository](https://github.com/abarisuzuner/cancellation-backfil)
