@@ -16,30 +16,26 @@
     "maxStepTimeSeconds": 45,
     "waitForNetworkIdle": false,
     "notes": [
-      "Set submission.demoUrl to https://abarisuzuner.github.io/cancellation-backfil/ before submitting. The pasted APP DETAILS currently leaves it null.",
-      "Run in a dedicated browser context containing only disposable sample data. Each workflow resets the fictional clinic workspace.",
-      "Preserve browser storage throughout each workflow. Staff screens and patient previews must use the same browser context.",
-      "Keep all navigation on https://abarisuzuner.github.io and preserve the /cancellation-backfil/ path prefix.",
-      "Query parameters in persistence checks force a document navigation while retaining saved records.",
-      "Offers expire after two minutes. Complete acceptance promptly. Use the simulated clock control to test expiry.",
-      "Do not assert a fixed elapsed booking time.",
-      "The availability assistant uses deterministic local parsing. Live AI, Oracle persistence, external notifications, and cross-device access are not connected."
+      "The supplied APP DETAILS still has a null demoUrl. This contract uses the live project URL previously supplied and verified. Set submission.demoUrl to https://abarisuzuner.github.io/cancellation-backfil/ before submitting.",
+      "Use a dedicated browser context containing only disposable sample data. Each workflow resets the fictional clinic through its own controls.",
+      "Preserve localStorage throughout each workflow. Staff screens and patient previews must run in the same browser context.",
+      "Keep navigation on https://abarisuzuner.github.io and preserve the /cancellation-backfil/ path prefix.",
+      "Query parameters in persistence checks force document navigation without clearing saved records.",
+      "Offers expire after two minutes. Execute offer creation and acceptance promptly. Test expiry with the simulated clock control.",
+      "Elapsed booking time varies. Verify the saved patient, booking status, and estimated appointment value instead of an exact duration.",
+      "The availability assistant is a deterministic local parser. The demo does not connect to live AI, Oracle persistence, external messaging, or shared records across devices."
     ]
   },
   "workflows": [
     {
-      "id": "cancel-match-accept-persist",
+      "id": "guided-cancellation-to-confirmed-booking",
       "name": "Recover a cancelled appointment",
-      "purpose": "Verify eligibility explanations, an offer to the highest-ranked patient, acceptance, recovered appointment value, and persistence.",
+      "purpose": "Prove that the guided workflow filters and ranks patients, produces an accepted replacement booking, and preserves the result after navigation.",
       "startPath": "/cancellation-backfil/#settings",
       "steps": [
         {
           "action": "goto",
           "value": "/cancellation-backfil/#settings"
-        },
-        {
-          "action": "assertVisible",
-          "selector": "#settings-form"
         },
         {
           "action": "click",
@@ -50,16 +46,24 @@
           "selector": "dialog[open] form[data-form='reset'] button[type='submit']"
         },
         {
-          "action": "waitForUrl",
-          "value": "/cancellation-backfil/#overview"
+          "action": "assertVisible",
+          "selector": "#recovery-journey[data-state='booked']"
         },
         {
           "action": "click",
-          "selector": "button[aria-label='Cancel 15:00 appointment']"
+          "selector": "#recovery-journey button[data-action='cancel']"
         },
         {
           "action": "click",
           "selector": "dialog[open] form[data-form='cancel'] button[type='submit']"
+        },
+        {
+          "action": "assertVisible",
+          "selector": "#recovery-journey[data-state='matching']"
+        },
+        {
+          "action": "click",
+          "selector": "#recovery-journey button[data-action='review-matches']"
         },
         {
           "action": "assertText",
@@ -84,16 +88,12 @@
           "selector": "button[data-action='send-offer'][data-id='alex'][data-slot='slot-1500']"
         },
         {
-          "action": "waitForText",
-          "value": "Waiting for a reply"
+          "action": "assertVisible",
+          "selector": "#recovery-journey[data-state='pending']"
         },
         {
           "action": "click",
-          "selector": ".match-card a[href^='#offer/']"
-        },
-        {
-          "action": "assertVisible",
-          "selector": "button[data-action='accept']"
+          "selector": "#recovery-journey button[data-action='preview-offer']"
         },
         {
           "action": "click",
@@ -109,13 +109,13 @@
           "value": "/cancellation-backfil/?verification=booking#overview"
         },
         {
+          "action": "assertVisible",
+          "selector": "#recovery-journey[data-state='filled']"
+        },
+        {
           "action": "assertText",
           "selector": ".journey-banner h2",
           "value": "Alex Morgan is on the calendar."
-        },
-        {
-          "action": "assertVisible",
-          "selector": ".filled-state"
         }
       ],
       "success": {
@@ -124,22 +124,23 @@
         "allText": [
           "Alex Morgan is on the calendar.",
           "Alex Morgan is booked.",
+          "Confirmed booking",
           "Refilled",
           "$75",
           "1 appointment backfilled · estimated"
         ],
         "anyText": [],
         "visibleSelectors": [
-          "#main-content",
-          ".filled-state",
-          "button[aria-label='Cancel 15:00 appointment']"
+          "#recovery-journey[data-state='filled']",
+          "#recovery-status",
+          ".filled-state"
         ]
       }
     },
     {
-      "id": "parse-review-save-preferences",
+      "id": "review-and-save-extracted-availability",
       "name": "Create a patient from a scheduling note",
-      "purpose": "Verify preference extraction, explicit review, and a saved patient record that survives navigation.",
+      "purpose": "Prove that the local parser extracts preferences different from the form defaults, requires explicit review, and saves a searchable record that survives navigation.",
       "startPath": "/cancellation-backfil/#settings",
       "steps": [
         {
@@ -155,8 +156,8 @@
           "selector": "dialog[open] form[data-form='reset'] button[type='submit']"
         },
         {
-          "action": "waitForUrl",
-          "value": "/cancellation-backfil/#overview"
+          "action": "assertVisible",
+          "selector": "#recovery-journey[data-state='booked']"
         },
         {
           "action": "goto",
@@ -250,9 +251,9 @@
       }
     },
     {
-      "id": "expiry-decline-manual-follow-up",
-      "name": "Handle unsuccessful offers",
-      "purpose": "Verify expiry, an offer to the next eligible patient, and manual-follow-up guidance after a decline leaves no eligible candidates.",
+      "id": "expired-offer-next-patient-and-decline",
+      "name": "Handle expiry and decline without a false booking",
+      "purpose": "Prove that an expired offer closes, the next eligible patient can receive an offer, and a decline leaves the slot open with manual-follow-up guidance and zero recovered value.",
       "startPath": "/cancellation-backfil/#settings",
       "steps": [
         {
@@ -268,12 +269,8 @@
           "selector": "dialog[open] form[data-form='reset'] button[type='submit']"
         },
         {
-          "action": "waitForUrl",
-          "value": "/cancellation-backfil/#overview"
-        },
-        {
           "action": "click",
-          "selector": "button[aria-label='Cancel 15:00 appointment']"
+          "selector": "#recovery-journey button[data-action='cancel']"
         },
         {
           "action": "click",
@@ -284,8 +281,8 @@
           "selector": "button[data-action='send-offer'][data-id='alex'][data-slot='slot-1500']"
         },
         {
-          "action": "waitForText",
-          "value": "Waiting for a reply"
+          "action": "assertVisible",
+          "selector": "#recovery-journey[data-state='pending']"
         },
         {
           "action": "goto",
@@ -312,10 +309,6 @@
           "selector": "a[href^='#offer/']"
         },
         {
-          "action": "waitForText",
-          "value": "The response window has closed. The clinic can now offer this appointment to another patient."
-        },
-        {
           "action": "assertText",
           "selector": ".response-confirmation",
           "value": "This offer is closed."
@@ -323,6 +316,11 @@
         {
           "action": "goto",
           "value": "/cancellation-backfil/#overview"
+        },
+        {
+          "action": "assertText",
+          "selector": "#recovery-status",
+          "value": "Alex Morgan's offer expired. 1 of 6 waitlist entries can attend. Review the reasons and choose a patient below."
         },
         {
           "action": "assertText",
@@ -334,12 +332,8 @@
           "selector": "button[data-action='send-offer'][data-id='sam'][data-slot='slot-1500']"
         },
         {
-          "action": "waitForText",
-          "value": "Waiting for a reply"
-        },
-        {
           "action": "click",
-          "selector": ".match-card a[href^='#offer/']"
+          "selector": "#recovery-journey button[data-action='preview-offer']"
         },
         {
           "action": "click",
@@ -351,7 +345,16 @@
         },
         {
           "action": "goto",
-          "value": "/cancellation-backfil/#overview"
+          "value": "/cancellation-backfil/?verification=followup#overview"
+        },
+        {
+          "action": "assertVisible",
+          "selector": "#recovery-journey[data-state='manual']"
+        },
+        {
+          "action": "assertText",
+          "selector": "#recovery-status",
+          "value": "Sam Rivera's offer was declined. No suitable patient remains for this opening. Keep the appointment open and review preferences or follow up manually."
         },
         {
           "action": "assertText",
@@ -360,18 +363,18 @@
         }
       ],
       "success": {
-        "requiredUrlPattern": "^https://abarisuzuner[.]github[.]io/cancellation-backfil/#overview$",
+        "requiredUrlPattern": "^https://abarisuzuner[.]github[.]io/cancellation-backfil/[?]verification=followup#overview$",
         "allowedUrlPatterns": [],
         "allText": [
           "No eligible match right now",
           "Keep the slot open for manual follow-up, or review the waitlist preferences.",
           "Open slot",
-          "Review waitlist",
           "$0",
           "0 appointments backfilled · estimated"
         ],
         "anyText": [],
         "visibleSelectors": [
+          "#recovery-journey[data-state='manual']",
           ".match-card .empty-state",
           ".match-card a[href='#waitlist']"
         ]
