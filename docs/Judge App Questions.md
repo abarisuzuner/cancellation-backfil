@@ -39,15 +39,9 @@ The intended value is less manual searching and coordination, more recovered app
 
 We built the published application with **dependency-free JavaScript, HTML, and CSS**. GitHub Pages serves the root `index.html`, which loads application files from `code/`. Relative asset URLs and hash-based navigation keep the application working under the repository's `/cancellation-backfil/` path, including direct links and page refreshes. No package installation or build bundling is required to run it locally.
 
-The implementation separates responsibilities:
+The implementation separates the interface from the scheduling rules and storage. The app.js and styles.css files in the code folder provide responsive clinic screens, forms, patient previews, and interaction handling. The engine.js module handles eligibility, ranking, cancellation, offer deadlines, acceptance, and metrics.
 
-| Component | Role |
-| --- | --- |
-| `code/app.js` and `code/styles.css` | Responsive clinic screens, forms, patient previews, and interaction handling |
-| `code/engine.js` | Eligibility, ranking, cancellation, offer deadlines, acceptance, and metrics |
-| `code/store.js` | Versioned browser storage, coordinated writes, and updates across tabs |
-| `code/parser.js` | Deterministic scheduling-note extraction and reviewable preference drafts |
-| `code/tests/` | Automated checks for scheduling rules, parsing, and persistence behavior |
+The store.js module manages versioned browser storage, coordinates writes, and shares updates across tabs. The parser.js module extracts scheduling details into preference drafts for staff to review. Automated checks in the code/tests folder cover scheduling rules, parsing, and persistence behavior.
 
 The main engineering challenge was keeping the appointment, offer, and waitlist consistent when responses are repeated or arrive after conditions change. Before a write, the app acquires a Web Lock and rereads the latest saved workspace. It then validates and saves the resulting state. This coordinates cooperating tabs in the same browser profile and prevents competing actions from creating duplicate active bookings. It is a browser-local guarantee; it does not provide coordination between independent devices.
 
