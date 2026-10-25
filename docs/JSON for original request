@@ -16,20 +16,21 @@
     "maxStepTimeSeconds": 45,
     "waitForNetworkIdle": false,
     "notes": [
-      "Run these workflows in a dedicated browser context containing only disposable sample data. Each workflow resets that context's fictional clinic records through the application's own controls.",
-      "Preserve localStorage and the same browser context throughout each workflow. Records and patient preview links belong to that browser workspace.",
-      "All navigation must retain the /cancellation-backfil/ path prefix and remain on https://abarisuzuner.github.io.",
-      "The query parameters used in persistence checks force a document navigation without clearing the saved workspace.",
-      "Offers have a two-minute response window. Execute offer creation, preview opening, and acceptance promptly. The expiry workflow advances the simulated clinic clock instead of waiting.",
-      "Do not require a fixed elapsed booking time. Verify the confirmed patient, appointment status, and recovered appointment value.",
-      "The availability assistant is a deterministic local parser. These workflows do not demonstrate live AI inference, Oracle persistence, authentication, external messaging, or cross-device patient access."
+      "Set submission.demoUrl to https://abarisuzuner.github.io/cancellation-backfil/ before submitting. The pasted APP DETAILS currently leaves it null.",
+      "Run in a dedicated browser context containing only disposable sample data. Each workflow resets the fictional clinic workspace.",
+      "Preserve browser storage throughout each workflow. Staff screens and patient previews must use the same browser context.",
+      "Keep all navigation on https://abarisuzuner.github.io and preserve the /cancellation-backfil/ path prefix.",
+      "Query parameters in persistence checks force a document navigation while retaining saved records.",
+      "Offers expire after two minutes. Complete acceptance promptly. Use the simulated clock control to test expiry.",
+      "Do not assert a fixed elapsed booking time.",
+      "The availability assistant uses deterministic local parsing. Live AI, Oracle persistence, external notifications, and cross-device access are not connected."
     ]
   },
   "workflows": [
     {
       "id": "cancel-match-accept-persist",
-      "name": "Fill a cancelled appointment and preserve the booking",
-      "purpose": "Proves that a cancelled appointment can be matched to an eligible waiting patient, accepted through the patient preview, and retained after a full document navigation.",
+      "name": "Recover a cancelled appointment",
+      "purpose": "Verify eligibility explanations, an offer to the highest-ranked patient, acceptance, recovered appointment value, and persistence.",
       "startPath": "/cancellation-backfil/#settings",
       "steps": [
         {
@@ -42,11 +43,11 @@
         },
         {
           "action": "click",
-          "selector": "button[data-action="reset"]"
+          "selector": "button[data-action='reset']"
         },
         {
           "action": "click",
-          "selector": "dialog[open] form[data-form="reset"] button[type="submit"]"
+          "selector": "dialog[open] form[data-form='reset'] button[type='submit']"
         },
         {
           "action": "waitForUrl",
@@ -54,19 +55,25 @@
         },
         {
           "action": "click",
-          "selector": "button[aria-label="Cancel 15:00 appointment"]"
+          "selector": "button[aria-label='Cancel 15:00 appointment']"
         },
         {
           "action": "click",
-          "selector": "dialog[open] form[data-form="cancel"] button[type="submit"]"
+          "selector": "dialog[open] form[data-form='cancel'] button[type='submit']"
         },
         {
-          "action": "waitForText",
+          "action": "assertText",
+          "selector": ".matches-header strong",
           "value": "2 eligible patients"
         },
         {
+          "action": "assertText",
+          "selector": ".candidate.best h3",
+          "value": "Alex Morgan"
+        },
+        {
           "action": "click",
-          "value": "4 patients not eligible"
+          "selector": ".match-card details.excluded summary"
         },
         {
           "action": "assertVisible",
@@ -74,7 +81,7 @@
         },
         {
           "action": "click",
-          "selector": "button[data-action="send-offer"][data-id="alex"][data-slot="slot-1500"]"
+          "selector": "button[data-action='send-offer'][data-id='alex'][data-slot='slot-1500']"
         },
         {
           "action": "waitForText",
@@ -82,18 +89,19 @@
         },
         {
           "action": "click",
-          "selector": "a[href^="#offer/"]"
+          "selector": ".match-card a[href^='#offer/']"
         },
         {
           "action": "assertVisible",
-          "selector": "button[data-action="accept"]"
+          "selector": "button[data-action='accept']"
         },
         {
           "action": "click",
-          "selector": "button[data-action="accept"]"
+          "selector": "button[data-action='accept']"
         },
         {
-          "action": "waitForText",
+          "action": "assertText",
+          "selector": ".response-confirmation",
           "value": "Confirmed for Alex Morgan. No further action needed."
         },
         {
@@ -111,7 +119,7 @@
         }
       ],
       "success": {
-        "requiredUrlPattern": "^https://abarisuzuner\\.github\\.io/cancellation-backfil/\\?verification=booking#overview$",
+        "requiredUrlPattern": "^https://abarisuzuner[.]github[.]io/cancellation-backfil/[?]verification=booking#overview$",
         "allowedUrlPatterns": [],
         "allText": [
           "Alex Morgan is on the calendar.",
@@ -124,14 +132,14 @@
         "visibleSelectors": [
           "#main-content",
           ".filled-state",
-          "button[aria-label="Cancel 15:00 appointment"]"
+          "button[aria-label='Cancel 15:00 appointment']"
         ]
       }
     },
     {
-      "id": "availability-draft-and-waitlist",
-      "name": "Create a patient from reviewed scheduling preferences",
-      "purpose": "Proves that the local availability assistant extracts a deterministic scheduling note, requires explicit review, and saves a searchable waitlist entry that survives navigation.",
+      "id": "parse-review-save-preferences",
+      "name": "Create a patient from a scheduling note",
+      "purpose": "Verify preference extraction, explicit review, and a saved patient record that survives navigation.",
       "startPath": "/cancellation-backfil/#settings",
       "steps": [
         {
@@ -140,11 +148,11 @@
         },
         {
           "action": "click",
-          "selector": "button[data-action="reset"]"
+          "selector": "button[data-action='reset']"
         },
         {
           "action": "click",
-          "selector": "dialog[open] form[data-form="reset"] button[type="submit"]"
+          "selector": "dialog[open] form[data-form='reset'] button[type='submit']"
         },
         {
           "action": "waitForUrl",
@@ -156,49 +164,52 @@
         },
         {
           "action": "click",
-          "selector": "button[data-action="new-patient"]"
+          "selector": "button[data-action='new-patient']"
         },
         {
           "action": "fill",
-          "selector": "#patient-form input[name="name"]",
+          "selector": "#patient-form input[name='name']",
           "value": "AI Judge Sample Patient"
         },
         {
           "action": "fill",
           "selector": "#scheduling-note",
-          "value": "I can come on Tuesdays between 2 and 5 in the afternoon, and I need at least an hour's notice."
+          "value": "Thursdays 10am to 12pm, 30 minutes notice"
         },
         {
           "action": "click",
-          "selector": "#patient-form button[data-action="extract"]"
+          "selector": "#patient-form button[data-action='extract']"
         },
         {
-          "action": "waitForText",
+          "action": "assertText",
+          "selector": "#parser-result h4",
           "value": "Here’s what the local parser found"
         },
         {
           "action": "assertVisible",
-          "value": "14:00–17:00"
+          "value": "10:00–12:00"
         },
         {
-          "action": "assertVisible",
+          "action": "assertText",
+          "selector": "#parser-result .parser-draft p",
           "value": "Review these values before applying them."
         },
         {
           "action": "click",
-          "selector": "#patient-form button[data-action="apply-draft"]"
+          "selector": "#patient-form button[data-action='apply-draft']"
         },
         {
-          "action": "waitForText",
+          "action": "assertText",
+          "selector": "#parser-result .draft-applied",
           "value": "Draft applied. Review the fields below, then save to confirm."
         },
         {
           "action": "click",
-          "selector": "#patient-form button[type="submit"]"
+          "selector": "#patient-form button[type='submit']"
         },
         {
           "action": "waitForText",
-          "value": "AI Judge Sample Patient"
+          "value": "Patient preferences saved."
         },
         {
           "action": "goto",
@@ -213,30 +224,35 @@
           "action": "assertText",
           "selector": "#patient-rows .patient-cell strong",
           "value": "AI Judge Sample Patient"
+        },
+        {
+          "action": "assertText",
+          "selector": "#patient-rows .patient-cell small",
+          "value": "Physiotherapy · 30 min"
         }
       ],
       "success": {
-        "requiredUrlPattern": "^https://abarisuzuner\\.github\\.io/cancellation-backfil/\\?verification=waitlist#waitlist$",
+        "requiredUrlPattern": "^https://abarisuzuner[.]github[.]io/cancellation-backfil/[?]verification=waitlist#waitlist$",
         "allowedUrlPatterns": [],
         "allText": [
           "AI Judge Sample Patient",
           "Physiotherapy · 30 min",
-          "Tue",
-          "14:00–17:00",
-          "60 min notice"
+          "Thu",
+          "10:00–12:00",
+          "30 min notice"
         ],
         "anyText": [],
         "visibleSelectors": [
           "#patient-rows",
-          "button[aria-label="Edit AI Judge Sample Patient"]",
-          "button[aria-label="Pause AI Judge Sample Patient"]"
+          "button[aria-label='Edit AI Judge Sample Patient']",
+          "button[aria-label='Pause AI Judge Sample Patient']"
         ]
       }
     },
     {
-      "id": "expiry-decline-and-manual-follow-up",
-      "name": "Handle expired and declined offers without booking the slot",
-      "purpose": "Proves that expiry closes an offer, the next eligible patient can receive it, and a decline leaves the appointment open with clear manual-follow-up guidance when no eligible candidates remain.",
+      "id": "expiry-decline-manual-follow-up",
+      "name": "Handle unsuccessful offers",
+      "purpose": "Verify expiry, an offer to the next eligible patient, and manual-follow-up guidance after a decline leaves no eligible candidates.",
       "startPath": "/cancellation-backfil/#settings",
       "steps": [
         {
@@ -245,11 +261,11 @@
         },
         {
           "action": "click",
-          "selector": "button[data-action="reset"]"
+          "selector": "button[data-action='reset']"
         },
         {
           "action": "click",
-          "selector": "dialog[open] form[data-form="reset"] button[type="submit"]"
+          "selector": "dialog[open] form[data-form='reset'] button[type='submit']"
         },
         {
           "action": "waitForUrl",
@@ -257,15 +273,15 @@
         },
         {
           "action": "click",
-          "selector": "button[aria-label="Cancel 15:00 appointment"]"
+          "selector": "button[aria-label='Cancel 15:00 appointment']"
         },
         {
           "action": "click",
-          "selector": "dialog[open] form[data-form="cancel"] button[type="submit"]"
+          "selector": "dialog[open] form[data-form='cancel'] button[type='submit']"
         },
         {
           "action": "click",
-          "selector": "button[data-action="send-offer"][data-id="alex"][data-slot="slot-1500"]"
+          "selector": "button[data-action='send-offer'][data-id='alex'][data-slot='slot-1500']"
         },
         {
           "action": "waitForText",
@@ -277,7 +293,7 @@
         },
         {
           "action": "click",
-          "selector": "button[data-action="advance-clock"]"
+          "selector": "button[data-action='advance-clock']"
         },
         {
           "action": "waitForText",
@@ -293,7 +309,7 @@
         },
         {
           "action": "click",
-          "selector": "a[href^="#offer/"]"
+          "selector": "a[href^='#offer/']"
         },
         {
           "action": "waitForText",
@@ -309,8 +325,13 @@
           "value": "/cancellation-backfil/#overview"
         },
         {
+          "action": "assertText",
+          "selector": ".candidate.best h3",
+          "value": "Sam Rivera"
+        },
+        {
           "action": "click",
-          "selector": "button[data-action="send-offer"][data-id="sam"][data-slot="slot-1500"]"
+          "selector": "button[data-action='send-offer'][data-id='sam'][data-slot='slot-1500']"
         },
         {
           "action": "waitForText",
@@ -318,11 +339,11 @@
         },
         {
           "action": "click",
-          "selector": "a[href^="#offer/"]"
+          "selector": ".match-card a[href^='#offer/']"
         },
         {
           "action": "click",
-          "selector": "button[data-action="decline"]"
+          "selector": "button[data-action='decline']"
         },
         {
           "action": "waitForText",
@@ -333,23 +354,26 @@
           "value": "/cancellation-backfil/#overview"
         },
         {
-          "action": "waitForText",
+          "action": "assertText",
+          "selector": ".match-card .empty-state h3",
           "value": "No eligible match right now"
         }
       ],
       "success": {
-        "requiredUrlPattern": "^https://abarisuzuner\\.github\\.io/cancellation-backfil/#overview$",
+        "requiredUrlPattern": "^https://abarisuzuner[.]github[.]io/cancellation-backfil/#overview$",
         "allowedUrlPatterns": [],
         "allText": [
           "No eligible match right now",
           "Keep the slot open for manual follow-up, or review the waitlist preferences.",
           "Open slot",
-          "Review waitlist"
+          "Review waitlist",
+          "$0",
+          "0 appointments backfilled · estimated"
         ],
         "anyText": [],
         "visibleSelectors": [
           ".match-card .empty-state",
-          ".match-card a[href="#waitlist"]"
+          ".match-card a[href='#waitlist']"
         ]
       }
     }
