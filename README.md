@@ -1,12 +1,12 @@
 # Cancellation Backfill
 
+[Open the application](https://abarisuzuner.github.io/cancellation-backfil/) · [GitHub repository](https://github.com/abarisuzuner/cancellation-backfil)
+
 Cancellation Backfill is an AI-assisted appointment recovery system for small dental and physiotherapy clinics. It connects newly available appointments with patients who are waiting and able to attend, helping clinics recover unused capacity and patients receive earlier appointments. The project was created for the **Oracle AI Hackathon 2026**.
 
 The core experience is simple: **a 3pm slot opens, a suitable patient receives an offer, and one click fills the appointment.**
 
 **Stage:** Working browser application. The current release runs entirely on GitHub Pages with fictional records stored in the visitor’s browser. Oracle persistence, live AI, staff authentication, and external messaging are planned server integrations.
-
-[Open the application](https://abarisuzuner.github.io/cancellation-backfil/) · [GitHub repository](https://github.com/abarisuzuner/cancellation-backfil)
 
 ## The problem
 
