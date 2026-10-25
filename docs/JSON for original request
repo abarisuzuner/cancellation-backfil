@@ -16,12 +16,14 @@
     "maxStepTimeSeconds": 45,
     "waitForNetworkIdle": false,
     "notes": [
-      "The submitted demoUrl is null. No browser origin can be opened, so automated verification cannot run.",
-      "No hosted demo or submitted implementation details were provided in APP DETAILS JSON."
+      "The supplied submission.demoUrl is null. No browser origin can be established without inventing or substituting a URL.",
+      "The submitted product description, problem, solution, implementation, repository URL, video URL, and contestant notes are also null.",
+      "No navigation or verification workflows are defined because the supplied submission has no demo URL."
     ]
   },
   "workflows": [],
   "manualReviewTriggers": [
-    "A live demoUrl is required before Playwright workflows can be verified."
+    "Missing demo URL: populate the submission's demoUrl with the actual public application URL, preserving its required path prefix, and regenerate the verification contract.",
+    "Missing submission descriptions: populate the product, problem, solution, and implementation fields so verification can establish the app's core value."
   ]
 }
