@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1d3430">
+  <title>Harbor Physio | Cancellation backfill</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div id="app">
+    <div class="loading-state">Loading appointment...</div>
+  </div>
+
+  <dialog id="waitlist-dialog" aria-labelledby="dialog-title">
+    <form id="waitlist-form">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">Waitlist</p>
+          <h2 id="dialog-title">Add a patient</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-dialog" aria-label="Close">&times;</button>
+      </div>
+      <p class="dialog-subtitle" id="dialog-date"></p>
+      <label class="field">
+        <span>Patient name</span>
+        <input name="patient_name" type="text" minlength="2" maxlength="60" autocomplete="off" required placeholder="e.g. Alex Rivera">
+      </label>
+      <div class="field-pair">
+        <label class="field">
+          <span>Priority</span>
+          <select name="urgency" required>
+            <option value="routine">Routine</option>
+            <option value="soon" selected>Soon</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Availability</span>
+          <select name="availability" required>
+            <option value="morning">Mornings</option>
+            <option value="afternoon" selected>Afternoons</option>
+            <option value="anytime">Any time</option>
+          </select>
+        </label>
+      </div>
+      <label class="field">
+        <span>Distance from clinic (km)</span>
+        <input name="distance_km" type="number" min="0" max="100" step="0.1" inputmode="decimal" required placeholder="2.4">
+      </label>
+      <p class="form-error" id="form-error" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" class="button button-subtle" id="cancel-dialog">Cancel</button>
+        <button type="submit" class="button button-primary">Add to waitlist</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

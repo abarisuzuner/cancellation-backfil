@@ -4,7 +4,7 @@ Cancellation Backfill is an AI-assisted appointment recovery system for small de
 
 The core experience is simple: **a 3pm slot opens, a suitable patient receives an offer, and one click fills the appointment.**
 
-**Stage:** Product design. This document defines the application behavior and architecture to be implemented.
+**Stage:** Product design with a [runnable workflow prototype](code/README.md). The Oracle/TypeScript architecture below is proposed, not implemented in the prototype.
 
 [GitHub repository](https://github.com/abarisuzuner/cancellation-backfil)
 
@@ -89,7 +89,7 @@ The core engineering priority is reliable booking state: a cancellation, offer, 
 
 ## Access and onboarding
 
-The hosted application and video walkthrough are not yet available. Links and local setup instructions will be published with the first runnable release. The [source repository](https://github.com/abarisuzuner/cancellation-backfil) contains the project documentation and application source directory.
+The hosted application and video walkthrough are not yet available. [Local prototype setup instructions](code/README.md) are available. The [source repository](https://github.com/abarisuzuner/cancellation-backfil) contains the project documentation and application source directory.
 
 Clinic deployments require authenticated staff access to the clinic's workspace. Onboarding establishes the clinic's time zone, clinicians, appointment types, and offer-response policy before appointments and waitlist entries are added. Patients respond through expiring, single-use offer links without creating a separate account.
 
@@ -162,8 +162,8 @@ The first release prioritizes a complete, observable booking journey. The main i
 
 ```text
 README.md   Product definition, architecture, and evaluation workflow
-code/       Application source
+code/       Runnable Python/SQLite workflow prototype, spec, and tests
 docs/       Supporting project materials
 ```
 
-Local setup instructions, environment variable names, database initialization, and run commands will be added with the application implementation.
+See [code/README.md](code/README.md) for prototype setup, database location, and run commands.
