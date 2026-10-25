@@ -1,0 +1,27 @@
+{
+  "appName": "Cancellation Backfill",
+  "baseUrl": null,
+  "auth": {
+    "required": false,
+    "loginPath": "",
+    "username": "",
+    "password": "",
+    "usernameSelector": "",
+    "passwordSelector": "",
+    "submitSelector": "",
+    "successUrlPattern": "",
+    "successText": []
+  },
+  "globalRules": {
+    "maxStepTimeSeconds": 45,
+    "waitForNetworkIdle": false,
+    "notes": [
+      "The submitted demoUrl is null. No browser origin can be opened, so automated verification cannot run.",
+      "No hosted demo or submitted implementation details were provided in APP DETAILS JSON."
+    ]
+  },
+  "workflows": [],
+  "manualReviewTriggers": [
+    "A live demoUrl is required before Playwright workflows can be verified."
+  ]
+}
