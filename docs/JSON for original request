@@ -1,6 +1,6 @@
 {
   "appName": "Cancellation Backfill",
-  "baseUrl": null,
+  "baseUrl": "https://abarisuzuner.github.io/cancellation-backfil/",
   "auth": {
     "required": false,
     "loginPath": "",
@@ -16,15 +16,343 @@
     "maxStepTimeSeconds": 45,
     "waitForNetworkIdle": false,
     "notes": [
-      "The supplied APP DETAILS JSON still has submission.demoUrl set to null. The base URL rules prohibit substituting the application URL from earlier conversation.",
-      "The submission description fields are also null. Saving answers in the GitHub repository does not populate the judging application's submission form.",
-      "Browser verification is blocked until the submission form contains the demo URL and an updated verification prompt is generated."
+      "Run these workflows in a dedicated browser context containing only disposable sample data. Each workflow resets that context's fictional clinic records through the application's own controls.",
+      "Preserve localStorage and the same browser context throughout each workflow. Records and patient preview links belong to that browser workspace.",
+      "All navigation must retain the /cancellation-backfil/ path prefix and remain on https://abarisuzuner.github.io.",
+      "The query parameters used in persistence checks force a document navigation without clearing the saved workspace.",
+      "Offers have a two-minute response window. Execute offer creation, preview opening, and acceptance promptly. The expiry workflow advances the simulated clinic clock instead of waiting.",
+      "Do not require a fixed elapsed booking time. Verify the confirmed patient, appointment status, and recovered appointment value.",
+      "The availability assistant is a deterministic local parser. These workflows do not demonstrate live AI inference, Oracle persistence, authentication, external messaging, or cross-device patient access."
     ]
   },
-  "workflows": [],
-  "manualReviewTriggers": [
-    "Enter https://abarisuzuner.github.io/cancellation-backfil/ in the submission form's Demo URL field.",
-    "Copy the completed answers from docs/Judge App Questions.md into the corresponding submission fields, save the form, and download a fresh verification prompt.",
-    "Confirm that the regenerated APP DETAILS JSON contains a non-null submission.demoUrl before generating executable workflows."
-  ]
+  "workflows": [
+    {
+      "id": "cancel-match-accept-persist",
+      "name": "Fill a cancelled appointment and preserve the booking",
+      "purpose": "Proves that a cancelled appointment can be matched to an eligible waiting patient, accepted through the patient preview, and retained after a full document navigation.",
+      "startPath": "/cancellation-backfil/#settings",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/#settings"
+        },
+        {
+          "action": "assertVisible",
+          "selector": "#settings-form"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="reset"]"
+        },
+        {
+          "action": "click",
+          "selector": "dialog[open] form[data-form="reset"] button[type="submit"]"
+        },
+        {
+          "action": "waitForUrl",
+          "value": "/cancellation-backfil/#overview"
+        },
+        {
+          "action": "click",
+          "selector": "button[aria-label="Cancel 15:00 appointment"]"
+        },
+        {
+          "action": "click",
+          "selector": "dialog[open] form[data-form="cancel"] button[type="submit"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "2 eligible patients"
+        },
+        {
+          "action": "click",
+          "value": "4 patients not eligible"
+        },
+        {
+          "action": "assertVisible",
+          "value": "Available Tue 09:00–12:00"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="send-offer"][data-id="alex"][data-slot="slot-1500"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "Waiting for a reply"
+        },
+        {
+          "action": "click",
+          "selector": "a[href^="#offer/"]"
+        },
+        {
+          "action": "assertVisible",
+          "selector": "button[data-action="accept"]"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="accept"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "Confirmed for Alex Morgan. No further action needed."
+        },
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/?verification=booking#overview"
+        },
+        {
+          "action": "assertText",
+          "selector": ".journey-banner h2",
+          "value": "Alex Morgan is on the calendar."
+        },
+        {
+          "action": "assertVisible",
+          "selector": ".filled-state"
+        }
+      ],
+      "success": {
+        "requiredUrlPattern": "^https://abarisuzuner\\.github\\.io/cancellation-backfil/\\?verification=booking#overview$",
+        "allowedUrlPatterns": [],
+        "allText": [
+          "Alex Morgan is on the calendar.",
+          "Alex Morgan is booked.",
+          "Refilled",
+          "$75",
+          "1 appointment backfilled · estimated"
+        ],
+        "anyText": [],
+        "visibleSelectors": [
+          "#main-content",
+          ".filled-state",
+          "button[aria-label="Cancel 15:00 appointment"]"
+        ]
+      }
+    },
+    {
+      "id": "availability-draft-and-waitlist",
+      "name": "Create a patient from reviewed scheduling preferences",
+      "purpose": "Proves that the local availability assistant extracts a deterministic scheduling note, requires explicit review, and saves a searchable waitlist entry that survives navigation.",
+      "startPath": "/cancellation-backfil/#settings",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/#settings"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="reset"]"
+        },
+        {
+          "action": "click",
+          "selector": "dialog[open] form[data-form="reset"] button[type="submit"]"
+        },
+        {
+          "action": "waitForUrl",
+          "value": "/cancellation-backfil/#overview"
+        },
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/#waitlist"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="new-patient"]"
+        },
+        {
+          "action": "fill",
+          "selector": "#patient-form input[name="name"]",
+          "value": "AI Judge Sample Patient"
+        },
+        {
+          "action": "fill",
+          "selector": "#scheduling-note",
+          "value": "I can come on Tuesdays between 2 and 5 in the afternoon, and I need at least an hour's notice."
+        },
+        {
+          "action": "click",
+          "selector": "#patient-form button[data-action="extract"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "Here’s what the local parser found"
+        },
+        {
+          "action": "assertVisible",
+          "value": "14:00–17:00"
+        },
+        {
+          "action": "assertVisible",
+          "value": "Review these values before applying them."
+        },
+        {
+          "action": "click",
+          "selector": "#patient-form button[data-action="apply-draft"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "Draft applied. Review the fields below, then save to confirm."
+        },
+        {
+          "action": "click",
+          "selector": "#patient-form button[type="submit"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "AI Judge Sample Patient"
+        },
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/?verification=waitlist#waitlist"
+        },
+        {
+          "action": "fill",
+          "selector": "#patient-search",
+          "value": "AI Judge Sample Patient"
+        },
+        {
+          "action": "assertText",
+          "selector": "#patient-rows .patient-cell strong",
+          "value": "AI Judge Sample Patient"
+        }
+      ],
+      "success": {
+        "requiredUrlPattern": "^https://abarisuzuner\\.github\\.io/cancellation-backfil/\\?verification=waitlist#waitlist$",
+        "allowedUrlPatterns": [],
+        "allText": [
+          "AI Judge Sample Patient",
+          "Physiotherapy · 30 min",
+          "Tue",
+          "14:00–17:00",
+          "60 min notice"
+        ],
+        "anyText": [],
+        "visibleSelectors": [
+          "#patient-rows",
+          "button[aria-label="Edit AI Judge Sample Patient"]",
+          "button[aria-label="Pause AI Judge Sample Patient"]"
+        ]
+      }
+    },
+    {
+      "id": "expiry-decline-and-manual-follow-up",
+      "name": "Handle expired and declined offers without booking the slot",
+      "purpose": "Proves that expiry closes an offer, the next eligible patient can receive it, and a decline leaves the appointment open with clear manual-follow-up guidance when no eligible candidates remain.",
+      "startPath": "/cancellation-backfil/#settings",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/#settings"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="reset"]"
+        },
+        {
+          "action": "click",
+          "selector": "dialog[open] form[data-form="reset"] button[type="submit"]"
+        },
+        {
+          "action": "waitForUrl",
+          "value": "/cancellation-backfil/#overview"
+        },
+        {
+          "action": "click",
+          "selector": "button[aria-label="Cancel 15:00 appointment"]"
+        },
+        {
+          "action": "click",
+          "selector": "dialog[open] form[data-form="cancel"] button[type="submit"]"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="send-offer"][data-id="alex"][data-slot="slot-1500"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "Waiting for a reply"
+        },
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/#settings"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="advance-clock"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "Clinic clock advanced by three minutes."
+        },
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/#inbox"
+        },
+        {
+          "action": "waitForText",
+          "value": "Expired"
+        },
+        {
+          "action": "click",
+          "selector": "a[href^="#offer/"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "The response window has closed. The clinic can now offer this appointment to another patient."
+        },
+        {
+          "action": "assertText",
+          "selector": ".response-confirmation",
+          "value": "This offer is closed."
+        },
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/#overview"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="send-offer"][data-id="sam"][data-slot="slot-1500"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "Waiting for a reply"
+        },
+        {
+          "action": "click",
+          "selector": "a[href^="#offer/"]"
+        },
+        {
+          "action": "click",
+          "selector": "button[data-action="decline"]"
+        },
+        {
+          "action": "waitForText",
+          "value": "You’ve declined this appointment. You’ll remain on the waitlist for another opening."
+        },
+        {
+          "action": "goto",
+          "value": "/cancellation-backfil/#overview"
+        },
+        {
+          "action": "waitForText",
+          "value": "No eligible match right now"
+        }
+      ],
+      "success": {
+        "requiredUrlPattern": "^https://abarisuzuner\\.github\\.io/cancellation-backfil/#overview$",
+        "allowedUrlPatterns": [],
+        "allText": [
+          "No eligible match right now",
+          "Keep the slot open for manual follow-up, or review the waitlist preferences.",
+          "Open slot",
+          "Review waitlist"
+        ],
+        "anyText": [],
+        "visibleSelectors": [
+          ".match-card .empty-state",
+          ".match-card a[href="#waitlist"]"
+        ]
+      }
+    }
+  ],
+  "manualReviewTriggers": []
 }
