@@ -1,0 +1,167 @@
+You are helping a hackathon contestant produce the exact browser verification JSON object that AI Judge will use to browse and verify their submitted app.
+
+Your audience is AI Judge, not a human judge. Return machine-usable instructions for a Playwright browser that prove the submitted app's core value works.
+
+Output rules:
+- Return exactly one raw JSON object and nothing else.
+- Do not wrap the JSON in markdown fences, prose, labels, headings, bullets, or a parent object.
+- The first character of your response must be { and the last character must be }.
+- The object must be valid JSON: double quotes only, no comments, no trailing commas.
+- Do not ask follow-up questions. Use the app details provided below.
+
+Return a JSON object with this contract shape:
+
+{
+  "appName": "Short app name",
+  "baseUrl": "https://submitted-demo.example.com",
+  "auth": {
+    "required": false,
+    "loginPath": "",
+    "username": "$AUTH_USERNAME",
+    "password": "$AUTH_PASSWORD",
+    "usernameSelector": "",
+    "passwordSelector": "",
+    "submitSelector": "",
+    "successUrlPattern": "",
+    "successText": []
+  },
+  "globalRules": {
+    "maxStepTimeSeconds": 45,
+    "waitForNetworkIdle": false,
+    "notes": []
+  },
+  "workflows": [
+    {
+      "id": "core-workflow",
+      "name": "Core workflow",
+      "purpose": "Proves the most important user value in the app.",
+      "startPath": "/",
+      "steps": [
+        { "action": "goto", "value": "/" },
+        { "action": "assertVisible", "selector": "main" }
+      ],
+      "success": {
+        "requiredUrlPattern": "",
+        "allowedUrlPatterns": [],
+        "allText": [],
+        "anyText": [],
+        "visibleSelectors": []
+      }
+    }
+  ],
+  "manualReviewTriggers": []
+}
+
+What AI Judge needs:
+- Enough detail to open the live app, sign in when needed, navigate to the meaningful screens, and verify deterministic evidence.
+- The workflows should prove what the team built, not just that the homepage loads.
+- Use the problem, solution, repo, video, demo URL, auth requirement, and contestant notes in APP DETAILS JSON as source material.
+
+Base URL rules:
+- Copy the submitted demoUrl from APP DETAILS JSON exactly into baseUrl. Do not infer a different host, substitute the repository URL, or drop a required path prefix.
+- Do not move to another origin. The contract baseUrl must share the same origin as the submitted demo URL.
+- If the submitted demo URL contains a required path prefix, keep that path in baseUrl or use workflow paths that preserve it.
+- Prefer relative paths in steps, such as "/", "/login", "/dashboard", or "settings". Use a full URL only when it is on the same origin.
+
+Authentication rules:
+- If the app is public, set auth.required to false and keep all auth credential and selector fields as empty strings.
+- If the app requires email/password demo login, set auth.required to true.
+- Never include real credentials in the JSON. Set auth.username to "$AUTH_USERNAME" and auth.password to "$AUTH_PASSWORD". AI Judge replaces those placeholders with the stored demo credentials at runtime.
+- For email/password login, include loginPath, usernameSelector, passwordSelector, submitSelector, and at least one post-login success check.
+- If auth.required is true, workflow 1 must be a complete login workflow whose id, name, or purpose includes the word login.
+- Automated judging only supports no-auth or stable email/password demos. Do not use OAuth, SSO, MFA, CAPTCHA, email verification, SMS, or manual approval.
+- Never include real secrets, API keys, private keys, production passwords, or personal accounts. Use only throwaway demo credentials supplied for judging.
+- If the app requires OAuth, SSO, magic links, passkeys, MFA, CAPTCHA, account pickers, email/SMS verification, paid checkout, or another flow a browser cannot deterministically complete, do not invent selectors. Add specific entries to manualReviewTriggers and explain the blocker in globalRules.notes.
+
+Workflow selection rules:
+- Include 2 to 4 workflows for most apps. Use 1 workflow only for very small public demos.
+- Put the strongest proof first after login. The first non-login workflow should demonstrate the app's main value proposition.
+- Use seeded demo data, stable test accounts, known routes, known labels, and exact expected text whenever possible.
+- Cover the important app type without assuming a specific domain: dashboards, CRUD apps, AI chat tools, data visualizations, marketplaces, games, developer tools, mobile-style web apps, internal tools, or content apps.
+- Avoid destructive actions unless the app uses disposable test data and the workflow clearly stays within that data.
+- Avoid workflows that depend on live third-party services, real payments, real emails, real SMS, private data, or time-sensitive external state.
+- Keep each workflow minimal: navigate, perform the key interaction, then assert clear success.
+
+Allowed step actions only:
+- goto
+- fill
+- click
+- press
+- waitForText
+- waitForUrl
+- assertVisible
+- assertText
+- assertUrl
+
+Step object schemas:
+- goto: { "action": "goto", "value": "/path-or-full-url" }
+- fill: { "action": "fill", "selector": "#input", "value": "text to enter" }
+- click: { "action": "click", "selector": "button[type=submit]" }
+- click by stable visible text when a selector is not known: { "action": "click", "value": "Start demo" }
+- press: { "action": "press", "selector": "#input", "value": "Enter" }
+- waitForText: { "action": "waitForText", "value": "Expected text" }
+- waitForUrl: { "action": "waitForUrl", "value": "/dashboard" }
+- assertVisible: { "action": "assertVisible", "selector": "main" }
+- assertVisible by stable visible text when a selector is not known: { "action": "assertVisible", "value": "Dashboard" }
+- assertText: { "action": "assertText", "selector": "main", "value": "Expected text" }
+- assertUrl: { "action": "assertUrl", "value": "/dashboard" }
+
+Important step-key rule:
+- Every action target must use value, not url, text, key, pattern, or requiredUrlPattern.
+- requiredUrlPattern is allowed only inside a workflow success block, never inside steps.
+
+Allowed success keys only:
+- requiredUrlPattern
+- allowedUrlPatterns
+- allText
+- anyText
+- visibleSelectors
+
+Selector rules:
+- Use CSS selectors only. Do not use XPath.
+- Prefer stable selectors in this order: #id, name, aria-label, placeholder, data-testid, exact href, role-like attributes, then route-scoped CSS.
+- Avoid nth-child, generated class names, animation classes, broad selectors, and selectors that depend on viewport-only layout.
+- For click and assertVisible, a stable visible text value is acceptable when a reliable CSS selector is not known.
+
+Success check rules:
+- Every workflow must include either a success object with at least one meaningful check or final assert steps that prove the desired state.
+- Prefer exact visible text, stable headings, stable selectors, and URL patterns that identify the real feature screen.
+- For AI/chat workflows, include a known prompt only if the app has a deterministic demo response or seeded behavior. Otherwise assert the UI state that proves the message was submitted and a response container appeared.
+- For games or simulations, verify the board/canvas/game area and a deterministic state change such as score, timer, level, or result text.
+- For dashboards or data apps, verify at least one meaningful metric, chart/table container, or seeded record.
+- For CRUD apps, use throwaway data and verify the created/updated/deleted state without harming real user data.
+
+Before returning the final JSON, self-check:
+1. Is the response exactly one JSON object?
+2. Is it valid JSON with no markdown or commentary?
+3. Does baseUrl exactly match the submitted demoUrl from APP DETAILS JSON?
+4. If auth is required, are placeholder credentials and login selectors present?
+5. If auth is required, is workflow 1 a complete login workflow?
+6. Does every workflow include deterministic steps and success evidence?
+7. Are all step actions from the allowed list and all action targets using value where required?
+8. Could this exact output be pasted directly into AI Judge's verificationInstructions field without cleanup?
+
+APP DETAILS JSON
+{
+  "hackathon": {
+    "name": "Oracle AI World Hackathon"
+  },
+  "team": {
+    "name": "Mirage Makers"
+  },
+  "submission": {
+    "whatWasBuilt": null,
+    "problemBackground": null,
+    "solution": null,
+    "implementation": null,
+    "demoUrl": null,
+    "repositoryUrl": null,
+    "videoUrl": null
+  },
+  "demoAccess": {
+    "requiresAuth": false,
+    "credentialPlaceholders": null,
+    "supportedAuth": null
+  },
+  "additionalContestantNotes": null
+}
