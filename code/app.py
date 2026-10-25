@@ -550,10 +550,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_file(ROOT / "index.html", "text/html; charset=utf-8")
                 return
             if path == "/app.js":
-                self.send_file(ROOT / "app.js", "text/javascript; charset=utf-8")
+                self.send_file(ROOT / "server-app.js", "text/javascript; charset=utf-8")
                 return
             if path == "/styles.css":
-                self.send_file(ROOT / "styles.css", "text/css; charset=utf-8")
+                self.send_file(ROOT / "server-styles.css", "text/css; charset=utf-8")
                 return
             self.send_json({"error": "not_found", "message": "Page not found."}, 404)
         except APIError as error:

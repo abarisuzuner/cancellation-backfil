@@ -1,6 +1,6 @@
 # Runnable workflow prototype
 
-This is the smallest end-to-end cancellation backfill demo described in [SPEC.md](SPEC.md). It uses synthetic patient names, one fictional physio clinic, one 3:00 PM appointment, and a local SQLite database. It is separate from the planned Oracle/TypeScript architecture in the repository README.
+This is the smallest end-to-end cancellation backfill demo described in [SPEC.md](SPEC.md). It uses synthetic patient names, one fictional physio clinic, one 3:00 PM appointment, and a local SQLite database. It is separate from the GitHub Pages application at the repository root and from the planned Oracle service integration. Its JavaScript and CSS are preserved as `server-app.js` and `server-styles.css`, served by `app.py` under their original public URLs.
 
 Requires Python 3.9 or newer; no packages need to be installed.
 
@@ -19,3 +19,7 @@ python3 -m unittest discover -s code -p 'test_*.py'
 ```
 
 This is a local prototype, not a clinic deployment: there is no authentication, real messaging, calendar integration, AI extraction, or Oracle persistence. Do not enter real patient data.
+
+## GitHub Pages application
+
+The root `index.html` loads `code/app.js` and `code/styles.css` for a separate browser-local application. Run it with `node code/scripts/serve.mjs` from the repository root; see the [main README](../README.md) for usage and publication instructions. The two versions do not share records.
