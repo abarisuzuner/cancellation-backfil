@@ -29,6 +29,8 @@ Cancellation Backfill brings the waitlist, matching decision, patient offer, and
 
 The result is a shorter path from cancellation to confirmed booking, with less searching, calling, and duplicate data entry.
 
+The overview’s recovery progress panel follows the 15:00 reference appointment through opening, matching, patient response, and confirmation. It derives progress from saved records, explains unsuccessful offers, and links to the next action. Expand its workflow explanation to compare manual calling with the product-assisted process.
+
 ### Matching policy
 
 Eligibility comes before ranking. A patient must need a compatible treatment and clinician, fit the slot's duration, be available for the whole appointment, have sufficient travel and notice time, and have no conflicting booking.
@@ -56,6 +58,7 @@ The application uses dependency-free JavaScript modules, HTML, and CSS. GitHub P
 | Interface | `code/app.js` and `code/styles.css` | Responsive dashboard, appointment editor, waitlist, inbox, patient preview, activity, and settings |
 | Booking rules | `code/engine.js` | Eligibility, ranking, cancellation, offer lifecycle, booking integrity, and metrics |
 | Persistence | `code/store.js` | Versioned localStorage workspace, serialized writes through Web Locks, and updates across tabs |
+| Recovery progress | `code/journey.js` | Derives the reference journey from current appointment and offer records |
 | Preference extraction | `code/parser.js` | Local parsing, reviewable drafts, and explicit handling of ambiguity |
 | Entry point | `index.html` | Static page with relative stylesheet and module URLs |
 | Verification | `code/tests/` | Node's built-in tests for business rules, parser behavior, and persistence coordination |

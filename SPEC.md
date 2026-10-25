@@ -29,7 +29,7 @@ Store a versioned workspace in localStorage. Different browser profiles are isol
 
 ## Additional screens
 
-Dashboard, appointment list and creation, waitlist search/add/edit/pause, patient inbox, individual offer page, activity history with JSON export, clinic settings, and an accessible quick-start guide. Availability text extraction produces a reviewable draft; applying it populates editable fields and saving requires an explicit action. Unsupported or ambiguous text leaves manual entry available.
+Dashboard with record-derived recovery progress and a manual/product workflow comparison, appointment list and creation, waitlist search/add/edit/pause, patient inbox, individual offer page, activity history with JSON export, clinic settings, and an accessible quick-start guide. Availability text extraction produces a reviewable draft; applying it populates editable fields and saving requires an explicit action. Unsupported or ambiguous text leaves manual entry available.
 
 ## Verification
 

@@ -1,6 +1,7 @@
 import { CLINICIANS, WEEKDAYS, DAY, MINUTE, uid, clock, clinician, time, dateLabel, sameDay, minutes, asTime, money, activeBooking, activeOffer, slotStatus, matches, metrics, cancelBooking, sendOffer, respondToOffer, savePatient, togglePatient, addSlot, reconcile } from './engine.js';
 import { getState, subscribe, transact, resetWorkspace, isPersistent } from './store.js';
 import { parsePreferences } from './parser.js';
+import { recoveryJourney } from './journey.js';
 
 const $ = selector => document.querySelector(selector);
 const app = $('#app');
@@ -103,7 +104,31 @@ function matchPanel(state, now) {
     return `<section class="card match-card">${heading}<div class="active-offer"><span class="badge offered"><span class="status-dot"></span>Waiting for a reply</span>${avatar(patient.name, 'large sage')}<h3>${escape(patient.name)}</h3><p>An earlier appointment is one click away.</p><div class="countdown-box">${icon('clock')}<strong data-countdown="${offer.expiresAt}">${countdown(offer.expiresAt, now)}</strong><span>remaining to accept</span></div><a class="button primary full" href="#offer/${offer.id}">Open patient preview ${icon('up')}</a><a class="text-btn centered" href="#inbox">View patient inbox ${icon('arrow')}</a><small>Preview only. No external message is sent.</small></div></section>`;
   }
   const ranked = matches(state, slot, now), eligible = ranked.filter(m => m.eligible), excluded = ranked.filter(m => !m.eligible);
-  return `<section class="card match-card">${heading}<div class="matches-header"><strong>${eligible.length} ${eligible.length === 1 ? 'eligible patient' : 'eligible patients'}</strong><span>Best match first</span></div>${eligible.length ? `<div class="candidate-list">${eligible.map(({ patient: p }, i) => `<article class="candidate ${i === 0 ? 'best' : ''}">${i === 0 ? `<div class="best-label">${icon('spark')} RECOMMENDED MATCH</div>` : ''}<div class="candidate-name">${avatar(p.name, i === 0 ? 'sage' : '')}<div><h3>${escape(p.name)}</h3><span>${priority(p.priority)}<small>Waiting ${Math.max(0, Math.floor((now - p.joinedAt) / DAY))}d</small></span></div></div><div class="candidate-facts"><span>${icon('clock')}${asTime(p.from)}–${asTime(p.to)}</span><span>${icon('location')}${p.distance} km away</span></div><button class="button ${i === 0 ? 'primary' : 'secondary'} full" data-action="send-offer" data-slot="${slot.id}" data-id="${p.id}">Offer this appointment ${icon('arrow')}</button></article>`).join('')}</div>` : empty('users', 'No eligible match right now', 'Keep the slot open for manual follow-up, or review the waitlist preferences.', `<a class="button secondary" href="#waitlist">Review waitlist ${icon('arrow')}</a>`)}${excluded.length ? `<details class="excluded"><summary>${excluded.length} patients not eligible ${icon('chevron')}</summary>${excluded.map(({ patient, reasons }) => `<div><strong>${escape(patient.name)}</strong><p>${escape(reasons.join(' · '))}</p></div>`).join('')}</details>` : ''}</section>`;
+  return `<section class="card match-card">${heading}<div class="matches-header"><strong>${eligible.length} ${eligible.length === 1 ? 'eligible patient' : 'eligible patients'}</strong><span>Best match first</span></div>${eligible.length ? `<p class="matching-policy">All candidates below meet the appointment constraints. Order: staff-assigned priority, longest wait, then shortest distance. You choose who receives the offer.</p><div class="candidate-list">${eligible.map(({ patient: p }, i) => `<article class="candidate ${i === 0 ? 'best' : ''}">${i === 0 ? `<div class="best-label">${icon('spark')} RECOMMENDED MATCH</div>` : ''}<div class="candidate-name">${avatar(p.name, i === 0 ? 'sage' : '')}<div><h3>${escape(p.name)}</h3><span>${priority(p.priority)}<small>Waiting ${Math.max(0, Math.floor((now - p.joinedAt) / DAY))}d</small></span></div></div><div class="candidate-facts"><span>${icon('clock')}${asTime(p.from)}–${asTime(p.to)}</span><span>${icon('location')}${p.distance} km away</span></div><button class="button ${i === 0 ? 'primary' : 'secondary'} full" data-action="send-offer" data-slot="${slot.id}" data-id="${p.id}">Offer this appointment ${icon('arrow')}</button></article>`).join('')}</div>` : empty('users', 'No eligible match right now', 'Keep the slot open for manual follow-up, or review the waitlist preferences.', `<a class="button secondary" href="#waitlist">Review waitlist ${icon('arrow')}</a>`)}${excluded.length ? `<details class="excluded"><summary>${excluded.length} patients not eligible ${icon('chevron')}</summary>${excluded.map(({ patient, reasons }) => `<div><strong>${escape(patient.name)}</strong><p>${escape(reasons.join(' · '))}</p></div>`).join('')}</details>` : ''}</section>`;
+}
+function recoveryPanel(state, now) {
+  const journey = recoveryJourney(state, 'slot-1500', now);
+  if (!journey) return '';
+  const { status, slot, booking, offer, eligible, completedSteps, closed } = journey;
+  const previous = closed ? `${closed.patientName}'s offer ${closed.status === 'declined' ? 'was declined' : 'expired'}. ` : '';
+  const descriptions = {
+    booked: 'Start with a cancellation. The original booking will stay in the history.',
+    matching: `${previous}${eligible.length} of ${state.patients.length} waitlist entries can attend. Review the reasons and choose a patient below.`,
+    pending: 'An offer is ready. Continue as the patient to accept or decline in this browser. No external message is sent.',
+    filled: `${booking?.patientName} has a confirmed replacement booking. ${money(slot.value, state.settings.currency)} estimated appointment value recovered in ${duration(booking?.elapsed || 0)}.`,
+    manual: `${previous}No suitable patient remains for this opening. Keep the appointment open and review preferences or follow up manually.`,
+    elapsed: 'The appointment start time has passed. Reset the sample workspace to try a fresh opening.',
+  };
+  const steps = ['Open appointment', 'Review matches', 'Patient response', 'Confirmed booking'];
+  const actions = {
+    booked: `<button class="button secondary" data-action="cancel" data-id="${slot.id}">Start recovery ${icon('arrow')}</button>`,
+    matching: `<button class="button secondary" data-action="review-matches" data-id="${slot.id}">Review eligible patients ${icon('arrow')}</button>`,
+    pending: `<button class="button secondary" data-action="preview-offer" data-id="${offer?.id}">Continue as patient ${icon('arrow')}</button>`,
+    filled: '<a class="button secondary" href="#activity">View booking history</a>',
+    manual: '<a class="button secondary" href="#waitlist">Check patient preferences</a>',
+    elapsed: '<button class="button secondary" data-action="reset">Reset sample workspace</button>',
+  };
+  return `<section id="recovery-journey" class="card recovery-journey" data-state="${status}" aria-labelledby="recovery-title"><div class="recovery-heading"><div><p class="eyebrow">ONE OPENING, FROM START TO FINISH</p><h2 id="recovery-title">Follow the ${time(slot.start)} opening</h2></div><span class="recovery-scope">Fictional clinic · Saved in this browser</span></div><ol class="recovery-steps">${steps.map((label, index) => `<li class="${index < completedSteps ? 'complete' : index === completedSteps && !['manual', 'elapsed'].includes(status) ? 'current' : ''}" ${index === completedSteps && !['manual', 'elapsed'].includes(status) ? 'aria-current="step"' : ''}><span class="step-number" aria-hidden="true">${index < completedSteps ? icon('check') : index + 1}</span><span>${label}<small>${index < completedSteps ? 'Complete' : index === completedSteps && !['manual', 'elapsed'].includes(status) ? 'Next action' : 'Not completed'}</small></span></li>`).join('')}</ol><div class="recovery-next"><p id="recovery-status">${escape(descriptions[status])}</p>${actions[status]}</div><details class="workflow-comparison"><summary>How this changes the front-desk workflow</summary><p><strong>Manual process:</strong> search the waitlist, check each patient's constraints, call one at a time, track replies, and update the appointment book.</p><p><strong>With Backfill:</strong> review eligible patients in order, approve one offer, and let acceptance update the appointment and waitlist together. Staff keep control of priority and follow-up.</p></details></section>`;
 }
 function overview(state, now) {
   const stats = metrics(state, now);
@@ -115,7 +140,7 @@ function overview(state, now) {
     ['users', 'Patients waiting', stats.waiting, 'An earlier visit could make their day', 'neutral'],
     ['wallet', 'Value recovered', money(stats.recovered, state.settings.currency), `${stats.filled} ${stats.filled === 1 ? 'appointment' : 'appointments'} backfilled · estimated`, 'green'],
     ['clock', 'Average time to fill', stats.average === null ? '—' : duration(stats.average), stats.average === null ? 'Your first match starts here' : 'From cancellation to confirmation', 'neutral'],
-  ].map(([glyph, label, value, detail, tone]) => `<article class="metric"><div class="metric-top"><span>${label}</span><span class="metric-icon ${tone}">${icon(glyph)}</span></div><strong>${value}</strong><small>${detail}</small></article>`).join('')}</div><section class="journey-banner"><div class="journey-mark">${icon(filled ? 'check' : 'leaf')}</div><div><span class="eyebrow">${filled ? 'ONE LESS EMPTY APPOINTMENT' : 'SMALL OPENINGS. REAL POSSIBILITIES.'}</span><h2>${filled ? `${escape(filled.patientName)} is on the calendar.` : 'A cancellation can be someone’s good news.'}</h2><p>${filled ? `Your 15:00 opening was filled in ${duration(filled.elapsed)}. That’s a little more care, delivered.` : 'Try the 15:00 scenario: open a slot, find a match, and fill it in moments.'}</p></div><button class="button cream" data-action="${filled ? 'show-activity' : scenarioEnded ? 'reset' : activeBooking(state, target.id) ? 'cancel' : 'select-slot'}" data-id="slot-1500">${filled ? 'See the journey' : scenarioEnded ? 'Start a fresh day' : activeBooking(state, target.id) ? 'Try a cancellation' : 'Find a match'} ${icon('arrow')}</button></section><div class="dashboard-grid"><div>${schedule(state, now)}${recentActivity(state)}</div>${matchPanel(state, now)}</div>`;
+  ].map(([glyph, label, value, detail, tone]) => `<article class="metric"><div class="metric-top"><span>${label}</span><span class="metric-icon ${tone}">${icon(glyph)}</span></div><strong>${value}</strong><small>${detail}</small></article>`).join('')}</div><section class="journey-banner"><div class="journey-mark">${icon(filled ? 'check' : 'leaf')}</div><div><span class="eyebrow">${filled ? 'ONE LESS EMPTY APPOINTMENT' : 'SMALL OPENINGS. REAL POSSIBILITIES.'}</span><h2>${filled ? `${escape(filled.patientName)} is on the calendar.` : 'A cancellation can be someone’s good news.'}</h2><p>${filled ? `Your 15:00 opening was filled in ${duration(filled.elapsed)}. That’s a little more care, delivered.` : 'Try the 15:00 scenario: open a slot, find a match, and fill it in moments.'}</p></div><button class="button cream" data-action="${filled ? 'show-activity' : scenarioEnded ? 'reset' : activeBooking(state, target.id) ? 'cancel' : 'select-slot'}" data-id="slot-1500">${filled ? 'See the journey' : scenarioEnded ? 'Start a fresh day' : activeBooking(state, target.id) ? 'Try a cancellation' : 'Find a match'} ${icon('arrow')}</button></section>${recoveryPanel(state, now)}<div class="dashboard-grid"><div>${schedule(state, now)}${recentActivity(state)}</div>${matchPanel(state, now)}</div>`;
 }
 function recentActivity(state) { return `<section class="card recent-card"><div class="card-heading"><div><h2>A little progress, at a glance</h2><p>The latest from your clinic.</p></div><a class="text-btn" href="#activity">All activity ${icon('up')}</a></div>${state.events.slice(0, 3).map(e => `<div class="recent-event"><span class="event-icon ${e.type}">${icon(eventIcon(e.type))}</span><div><strong>${escape(e.title)}</strong><small>${escape(e.detail)}</small></div><time>${time(e.at)}</time></div>`).join('')}</section>`; }
 function patientRows(state, now) {
@@ -233,6 +258,15 @@ document.addEventListener('click', async event => {
   if (action === 'extract') return extractPreferences();
   if (action === 'apply-draft') return applyDraft();
   if (action === 'show-activity') return go('activity');
+  if (action === 'preview-offer') return go(`offer/${id}`);
+  if (action === 'review-matches') {
+    selectedSlot = id; render();
+    const panel = $('.match-card');
+    panel?.setAttribute('tabindex', '-1');
+    panel?.focus({ preventScroll: true });
+    panel?.scrollIntoView({ behavior: 'instant', block: 'start' });
+    return;
+  }
   if (action === 'export') return exportActivity();
   if (action === 'select-slot') {
     selectedSlot = id;
