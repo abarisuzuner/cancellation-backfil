@@ -1,0 +1,8 @@
+For this chosen Outcome:
+1. Cancellation Backfill for Small Clinics ⭐ top pick
+Who has the problem: Dental and physio clinic front desks, and the patients waiting weeks for an appointment.
+The problem: When someone cancels, the slot goes empty because calling around the waitlist takes too long. The clinic loses revenue while patients who would have taken the slot keep waiting.
+The build: Tables for appointments and the waitlist. Cancelling a slot ranks the waitlist by urgency, availability and distance, then offers the slot to the top match, who can accept with one click.
+Demo hook: “A 3pm slot just opened” leads to “filled in 30 seconds.” It’s simple, it involves real money and everyone has lived it.
+
+sketch the smallest end-to-end MVP. Specify the input, output schema, user flow, non-goals, and acceptable checks. Flag the riskiest dependency. Save the agreed scope in SPEC.md before coding.
